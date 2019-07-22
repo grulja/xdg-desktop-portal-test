@@ -20,6 +20,7 @@
 
 #include "screencaststream.h"
 
+#include <limits.h>
 #include <math.h>
 #include <sys/mman.h>
 #include <stdio.h>
@@ -53,7 +54,7 @@ static int greatestCommonDivisor(int a, int b)
         b = temp % b;
     }
 
-    return ABS(a);
+    return qAbs(a);
 }
 
 static PwFraction pipewireFractionFromDouble(double src)
@@ -65,13 +66,13 @@ static PwFraction pipewireFractionFromDouble(double src)
     int64_t N2, D2;              /* numerator, denominator of previous approx */
     int i;
     int gcd;
-    gboolean negative = FALSE;
+    bool negative = false;
 
     /* initialize fraction being converted */
     F = src;
     if (F < 0.0) {
         F = -F;
-        negative = TRUE;
+        negative = true;
     }
 
     V = F;
@@ -85,7 +86,7 @@ static PwFraction pipewireFractionFromDouble(double src)
 
     for (i = 0; i < MAX_TERMS; ++i) {
         /* get next term */
-        A = (gint) F;               /* no floor() needed, F is always >= 0 */
+        A = (int) F;               /* no floor() needed, F is always >= 0 */
         /* get new divisor */
         F = F - A;
 
@@ -94,7 +95,7 @@ static PwFraction pipewireFractionFromDouble(double src)
         D2 = D1 * A + D2;
 
         /* guard against overflow */
-        if (N2 > G_MAXINT || D2 > G_MAXINT)
+        if (N2 > INT_MAX || D2 > INT_MAX)
             break;
 
         N = N2;
@@ -107,7 +108,7 @@ static PwFraction pipewireFractionFromDouble(double src)
         D1 = D;
 
         /* quit if dividing by zero or close enough to target */
-        if (F < MIN_DIVISOR || fabs (V - ((gdouble) N) / D) < MAX_ERROR)
+        if (F < MIN_DIVISOR || fabs (V - ((double) N) / D) < MAX_ERROR)
             break;
 
         /* Take reciprocal */
@@ -116,7 +117,7 @@ static PwFraction pipewireFractionFromDouble(double src)
 
     /* fix for overflow */
     if (D == 0) {
-        N = G_MAXINT;
+        N = INT_MAX;
         D = 1;
     }
 
@@ -262,7 +263,7 @@ static void onStreamFormatChanged(void *data, const struct spa_pod *format)
     }
 #endif
     pw_stream_finish_format (pw->pwStream, 0,
-                             params, G_N_ELEMENTS (params));
+                             params, pw->streamDirection == ScreenCastStream::DirectionInput ? 2 : 1);
 }
 
 static void onStreamProcess(void *data)
@@ -452,9 +453,9 @@ bool ScreenCastStream::createStream()
                                                          PW_STREAM_FLAG_AUTOCONNECT | PW_STREAM_FLAG_INACTIVE | PW_STREAM_FLAG_MAP_BUFFERS);
 
 #if PW_CHECK_VERSION(0, 2, 9)
-    if (pw_stream_connect(pwStream, isOutput ? PW_DIRECTION_OUTPUT : PW_DIRECTION_INPUT, isOutput ? 0 : pwStreamNodeId , flags, params, G_N_ELEMENTS(&params)) != 0) {
+    if (pw_stream_connect(pwStream, isOutput ? PW_DIRECTION_OUTPUT : PW_DIRECTION_INPUT, isOutput ? 0 : pwStreamNodeId , flags, params, 1) != 0) {
 #else
-    if (pw_stream_connect(pwStream, isOutput ? PW_DIRECTION_OUTPUT : PW_DIRECTION_INPUT, nullptr, flags, params, G_N_ELEMENTS(&params)) != 0) {
+    if (pw_stream_connect(pwStream, isOutput ? PW_DIRECTION_OUTPUT : PW_DIRECTION_INPUT, nullptr, flags, params, 1) != 0) {
 #endif
         qCWarning(XdgDesktopPortalTestScreenCastStream) << "Could not connect to stream";
         return false;

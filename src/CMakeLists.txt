@@ -14,7 +14,6 @@ target_link_libraries(xdg-desktop-portal-test
     Qt5::DBus
     Qt5::Gui
     PipeWire::PipeWire
-    GLIB2::GLIB2
 )
 
 install(TARGETS xdg-desktop-portal-test DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBEXECDIR})

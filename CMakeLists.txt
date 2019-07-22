@@ -8,12 +8,6 @@ set(CMAKE_AUTOMOC ON)
 include(FeatureSummary)
 include(GNUInstallDirs)
 
-find_package(GLIB2)
-set_package_properties(GLIB2 PROPERTIES
-    TYPE OPTIONAL
-    PURPOSE "Required for ScreenCast portal"
-)
-
 find_package(PipeWire)
 set_package_properties(PipeWire PROPERTIES
     TYPE OPTIONAL
